@@ -49,7 +49,7 @@ export default function DonatePage({ streamerId, streamerName, minDonation }: Pr
         payment_method: {
           billing_details: {
             email: 'donor@thaistream.app',
-            name: donorName || 'ไม่ระบุชื่อ',
+            name: donorName || 'Anonymous',
           },
         },
       })
@@ -124,7 +124,7 @@ export default function DonatePage({ streamerId, streamerName, minDonation }: Pr
               <label>ชื่อของคุณ</label>
               <input
                 type="text"
-                placeholder="ไม่ระบุชื่อ"
+                placeholder="Anonymous"
                 value={donorName}
                 onChange={(e) => setDonorName(e.target.value)}
                 maxLength={50}

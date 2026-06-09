@@ -42,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       currency: 'thb',
       payment_method_types: ['promptpay'],
       metadata: {
-        donorName: donorName || 'ไม่ระบุชื่อ',
+        donorName: donorName || 'Anonymous',
         message: message || '',
         streamerId,
       },
@@ -55,7 +55,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         userId,
         streamerId,
         stripePaymentId: paymentIntent.id,
-        donorName: donorName || 'ไม่ระบุชื่อ',
+        donorName: donorName || 'Anonymous',
         message: message || '',
         amount: amountSatangs,
         status: 'pending',
