@@ -11,7 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { streamerId } = req.query as { streamerId: string }
 
-  // ตรวจสอบว่าเป็น streamer คนนั้นจริงๆ
+  // Verify the requesting user owns this streamerId
   if (session.user.streamerId !== streamerId) {
     return res.status(403).json({ error: 'Forbidden' })
   }

@@ -6,7 +6,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { text, streamerId } = req.body
 
-  // ตรวจสอบว่า streamerId มีอยู่จริงในฐานข้อมูล (ป้องกันคนนอกใช้ API)
+  // Verify streamerId exists in DB to prevent unauthorized API usage
   if (!streamerId) return res.status(400).json({ error: 'Missing streamerId' })
   const streamer = await prisma.user.findUnique({
     where: { streamerId },
@@ -26,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           input: { text },
           voice: {
             languageCode: 'th-TH',
-            name: 'th-TH-Neural2-C', // เสียงภาษาไทยที่ดีที่สุด
+            name: 'th-TH-Neural2-C', // Best Thai voice available
           },
           audioConfig: { audioEncoding: 'MP3' },
         }),

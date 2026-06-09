@@ -38,12 +38,12 @@ export default function OverlayPage({ streamerId }: Props) {
       const data = await res.json()
       if (!data.audioContent) throw new Error('No audio')
 
-      // เล่น MP3 จาก base64
+      // Play MP3 from base64
       const audio = new Audio(`data:audio/mp3;base64,${data.audioContent}`)
       audio.play()
     } catch (err) {
       console.error('[TTS] Google TTS failed, falling back to browser TTS:', err)
-      // Fallback ไปใช้ browser TTS ถ้า Google TTS ล้มเหลว
+      // Fallback to browser TTS if Google TTS fails
       const utterance = new SpeechSynthesisUtterance(text)
       utterance.lang = 'th-TH'
       window.speechSynthesis.speak(utterance)
