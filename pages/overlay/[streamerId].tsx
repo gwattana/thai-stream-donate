@@ -130,15 +130,6 @@ export default function OverlayPage({ streamerId }: Props) {
     return () => wsRef.current?.close()
   }, [streamerId])
 
-  // Demo button for testing in browser
-  function fireDemo() {
-    enqueue({
-      id: 'demo-' + Date.now(),
-      donorName: 'ผู้สนับสนุน',
-      amount: 100,
-      message: 'Keep it up! ชอบมากเลยครับ 🎉',
-    })
-  }
 
   return (
     <>
@@ -198,10 +189,6 @@ export default function OverlayPage({ streamerId }: Props) {
           </div>
         )}
 
-        {/* Test button — only visible when NOT added to Streamlabs */}
-        <button className="demo-btn" onClick={fireDemo}>
-          Test Alert
-        </button>
       </div>
 
       <style jsx>{`
@@ -370,22 +357,6 @@ export default function OverlayPage({ streamerId }: Props) {
           transition: width 0.8s ease;
         }
 
-        /* ── Demo button ── */
-        .demo-btn {
-          position: fixed;
-          top: 12px;
-          right: 12px;
-          padding: 8px 16px;
-          background: rgba(139,92,246,0.6);
-          border: 1px solid #8b5cf6;
-          border-radius: 8px;
-          color: #fff;
-          font-size: 13px;
-          cursor: pointer;
-          font-family: inherit;
-          backdrop-filter: blur(4px);
-        }
-        .demo-btn:hover { background: rgba(139,92,246,0.8); }
       `}</style>
 
       <style global jsx>{`
