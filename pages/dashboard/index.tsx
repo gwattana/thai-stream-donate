@@ -11,6 +11,10 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState('')
   const [testMsg, setTestMsg] = useState('')
+  const [minDonation, setMinDonation] = useState(20)
+  const [minInput, setMinInput] = useState('20')
+  const [minSaving, setMinSaving] = useState(false)
+  const [minMsg, setMinMsg] = useState('')
 
   const streamerId = session?.user?.streamerId
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
@@ -27,9 +31,37 @@ export default function Dashboard() {
   useEffect(() => {
     if (!streamerId) return
     fetchDonations()
+    fetchSettings()
     const interval = setInterval(fetchDonations, 15000)
     return () => clearInterval(interval)
   }, [streamerId])
+
+  async function fetchSettings() {
+    const res = await fetch('/api/user/settings')
+    const data = await res.json()
+    if (data.minDonation) {
+      setMinDonation(data.minDonation)
+      setMinInput(String(data.minDonation))
+    }
+  }
+
+  async function saveMinDonation() {
+    setMinSaving(true)
+    const res = await fetch('/api/user/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ minDonation: Number(minInput) }),
+    })
+    const data = await res.json()
+    if (res.ok) {
+      setMinDonation(data.minDonation)
+      setMinMsg('✅ บันทึกแล้ว')
+    } else {
+      setMinMsg(`❌ ${data.error}`)
+    }
+    setMinSaving(false)
+    setTimeout(() => setMinMsg(''), 3000)
+  }
 
   async function fetchDonations() {
     try {
@@ -151,6 +183,28 @@ export default function Dashboard() {
             </div>
           </section>
 
+          {/* Settings */}
+          <section className="section">
+            <h2 className="section-title">⚙️ ตั้งค่า</h2>
+            <div className="url-card">
+              <div className="url-label">💰 ยอดโดเนทขั้นต่ำ (บาท)</div>
+              <div className="url-row">
+                <input
+                  type="number"
+                  className="min-input"
+                  value={minInput}
+                  onChange={(e) => setMinInput(e.target.value)}
+                  min={1}
+                />
+                <button className="copy-btn" onClick={saveMinDonation} disabled={minSaving}>
+                  {minSaving ? 'กำลังบันทึก...' : 'บันทึก'}
+                </button>
+                {minMsg && <span style={{ fontSize: '13px', color: '#86efac' }}>{minMsg}</span>}
+              </div>
+              <p className="url-hint">ปัจจุบัน: ฿{minDonation.toLocaleString()} — แฟนคลับจะโดเนทได้ขั้นต่ำเท่านี้</p>
+            </div>
+          </section>
+
           {/* Donation list */}
           <section className="section">
             <h2 className="section-title">💜 ประวัติ Donation</h2>
@@ -225,6 +279,8 @@ export default function Dashboard() {
         .donation-status.succeeded { color: #34d399; }
         .donation-status.pending { color: #fbbf24; }
         .empty { text-align: center; color: rgba(255,255,255,0.4); padding: 40px; background: rgba(255,255,255,0.03); border-radius: 14px; border: 1px dashed rgba(255,255,255,0.1); }
+        .min-input { width: 120px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 8px 12px; color: #fff; font-size: 15px; font-family: inherit; }
+        .min-input:focus { outline: none; border-color: #8b5cf6; }
       `}</style>
       <style global jsx>{`* { box-sizing: border-box; } body { margin: 0; }`}</style>
     </>

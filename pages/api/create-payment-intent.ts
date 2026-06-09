@@ -22,11 +22,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Verify streamer exists
   const streamer = await prisma.user.findUnique({
     where: { streamerId },
-    select: { id: true },
+    select: { id: true, minDonation: true },
   })
   if (!streamer) return res.status(404).json({ error: 'ไม่พบ Streamer' })
 
   const userId = streamer.id
+  const minDonation = streamer.minDonation ?? 20
+
+  if (Number(amount) < minDonation) {
+    return res.status(400).json({ error: `จำนวนเงินขั้นต่ำคือ ฿${minDonation}` })
+  }
 
   try {
     const amountSatangs = Math.round(Number(amount) * 100)

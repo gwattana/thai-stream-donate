@@ -10,9 +10,10 @@ const PRESET_AMOUNTS = [20, 50, 100, 200, 500, 1000]
 interface Props {
   streamerId: string
   streamerName: string
+  minDonation: number
 }
 
-export default function DonatePage({ streamerId, streamerName }: Props) {
+export default function DonatePage({ streamerId, streamerName, minDonation }: Props) {
   const [donorName, setDonorName] = useState('')
   const [amount, setAmount] = useState('')
   const [message, setMessage] = useState('')
@@ -25,8 +26,8 @@ export default function DonatePage({ streamerId, streamerName }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!amount || Number(amount) < 20) {
-      setErrorMsg('จำนวนเงินขั้นต่ำคือ ฿20')
+    if (!amount || Number(amount) < minDonation) {
+      setErrorMsg(`จำนวนเงินขั้นต่ำคือ ฿${minDonation.toLocaleString()}`)
       return
     }
     setErrorMsg('')
@@ -144,10 +145,10 @@ export default function DonatePage({ streamerId, streamerName }: Props) {
               </div>
               <input
                 type="number"
-                placeholder="หรือกรอกจำนวนเงินเอง"
+                placeholder={`ขั้นต่ำ ฿${minDonation}`}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                min={20}
+                min={minDonation}
               />
 
               <label>ข้อความ (ไม่บังคับ)</label>
@@ -445,7 +446,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
 
   const user = await prisma.user.findUnique({
     where: { streamerId },
-    select: { streamerId: true, name: true },
+    select: { streamerId: true, name: true, minDonation: true },
   })
 
   if (!user) return { notFound: true }
@@ -454,6 +455,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({ params }) 
     props: {
       streamerId: user.streamerId!,
       streamerName: user.name || user.streamerId!,
+      minDonation: user.minDonation,
     },
   }
 }

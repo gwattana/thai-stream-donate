@@ -53,6 +53,7 @@ model User {
   emailVerified DateTime?
   image         String?
   streamerId    String?   @unique // nickname/slug — set during onboarding
+  minDonation   Int       @default(20) // minimum donation amount in baht
   createdAt     DateTime  @default(now())
 
   accounts  Account[]
