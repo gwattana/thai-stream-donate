@@ -194,14 +194,14 @@ export default function Dashboard() {
                   className="min-input"
                   value={minInput}
                   onChange={(e) => setMinInput(e.target.value)}
-                  min={1}
+                  min={10}
                 />
                 <button className="copy-btn" onClick={saveMinDonation} disabled={minSaving}>
                   {minSaving ? 'กำลังบันทึก...' : 'บันทึก'}
                 </button>
                 {minMsg && <span style={{ fontSize: '13px', color: '#86efac' }}>{minMsg}</span>}
               </div>
-              <p className="url-hint">ปัจจุบัน: ฿{minDonation.toLocaleString()} — แฟนคลับจะโดเนทได้ขั้นต่ำเท่านี้</p>
+              <p className="url-hint">ปัจจุบัน: ฿{minDonation.toLocaleString()} — ขั้นต่ำสุดคือ ฿10 (ข้อจำกัดของ Stripe)</p>
             </div>
           </section>
 

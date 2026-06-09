@@ -15,8 +15,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (!streamerId) return res.status(400).json({ error: 'Missing streamerId' })
-  if (!amount || isNaN(Number(amount)) || Number(amount) < 1) {
-    return res.status(400).json({ error: 'Invalid amount' })
+  if (!amount || isNaN(Number(amount)) || Number(amount) < 10) {
+    return res.status(400).json({ error: 'จำนวนเงินขั้นต่ำคือ ฿10' })
   }
 
   // Verify streamer exists

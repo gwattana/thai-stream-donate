@@ -18,8 +18,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === 'POST') {
     const { minDonation } = req.body as { minDonation: number }
 
-    if (!minDonation || isNaN(minDonation) || minDonation < 1 || minDonation > 100000) {
-      return res.status(400).json({ error: 'Invalid amount (1–100,000 baht)' })
+    if (!minDonation || isNaN(minDonation) || minDonation < 10 || minDonation > 100000) {
+      return res.status(400).json({ error: 'ขั้นต่ำต้องไม่น้อยกว่า ฿10 (ข้อจำกัดของ Stripe)' })
     }
 
     await prisma.user.update({
