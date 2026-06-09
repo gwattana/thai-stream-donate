@@ -54,6 +54,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       } else {
         console.log('[Webhook] No overlay clients connected — donation saved to DB only')
       }
+
+      // Increment goal current amount
+      const amountBaht = Math.round(donation.amount / 100)
+      const updatedUser = await prisma.user.update({
+        where: { streamerId },
+        data: { goalCurrent: { increment: amountBaht } },
+        select: { goalName: true, goalAmount: true, goalCurrent: true },
+      })
+
+      // Push goal update to overlay
+      if (clients && clients.size > 0) {
+        const goalPayload = JSON.stringify({ type: 'goalUpdate', goal: updatedUser })
+        clients.forEach((ws) => {
+          if (ws.readyState === 1) ws.send(goalPayload)
+        })
+      }
     } catch (err) {
       // P2025 = record not found (duplicate webhook or unknown payment)
       console.error('[Webhook] DB update failed:', (err as Error).message)

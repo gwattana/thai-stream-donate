@@ -7,10 +7,17 @@ interface Props {
   streamerId: string
 }
 
+interface Goal {
+  goalName: string | null
+  goalAmount: number | null
+  goalCurrent: number
+}
+
 // Queue-based alert system — shows one at a time, queues the rest
 export default function OverlayPage({ streamerId }: Props) {
   const [currentAlert, setCurrentAlert] = useState<AlertPayload | null>(null)
   const [visible, setVisible] = useState(false)
+  const [goal, setGoal] = useState<Goal | null>(null)
   const queueRef = useRef<AlertPayload[]>([])
   const processingRef = useRef(false)
   const wsRef = useRef<WebSocket | null>(null)
@@ -76,6 +83,15 @@ export default function OverlayPage({ streamerId }: Props) {
     }, 6000)
   }
 
+  // Fetch initial goal state
+  useEffect(() => {
+    if (!streamerId) return
+    fetch(`/api/goal/${streamerId}`)
+      .then((r) => r.json())
+      .then((data) => { if (data.goalAmount) setGoal(data) })
+      .catch(() => {})
+  }, [streamerId])
+
   useEffect(() => {
     if (!streamerId) return
 
@@ -94,8 +110,9 @@ export default function OverlayPage({ streamerId }: Props) {
 
       ws.onmessage = (e) => {
         try {
-          const { type, donation } = JSON.parse(e.data)
-          if (type === 'donation') enqueue(donation)
+          const msg = JSON.parse(e.data)
+          if (msg.type === 'donation') enqueue(msg.donation)
+          if (msg.type === 'goalUpdate') setGoal(msg.goal)
         } catch (err) {
           console.error('[Overlay] Parse error:', err)
         }
@@ -159,6 +176,24 @@ export default function OverlayPage({ streamerId }: Props) {
               {['💜','⭐','✨','🎉','💫'].map((p, i) => (
                 <span key={i} className={`particle p${i}`}>{p}</span>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Donation goal bar — top right */}
+        {goal && goal.goalAmount && (
+          <div className="goal-container">
+            <div className="goal-header">
+              <span className="goal-name">{goal.goalName || 'เป้าหมาย'}</span>
+              <span className="goal-amounts">
+                ฿{goal.goalCurrent.toLocaleString()} / ฿{goal.goalAmount.toLocaleString()}
+              </span>
+            </div>
+            <div className="goal-bar-bg">
+              <div
+                className="goal-bar-fill"
+                style={{ width: `${Math.min((goal.goalCurrent / goal.goalAmount) * 100, 100)}%` }}
+              />
             </div>
           </div>
         )}
@@ -292,6 +327,47 @@ export default function OverlayPage({ streamerId }: Props) {
           0%   { transform: translateY(0) scale(0.5); opacity: 0; }
           30%  { opacity: 1; }
           100% { transform: translateY(-60px) scale(1.2); opacity: 0; }
+        }
+
+        /* ── Goal bar ── */
+        .goal-container {
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          width: 320px;
+          background: linear-gradient(135deg, rgba(20,8,50,0.92), rgba(45,27,105,0.92));
+          border: 1px solid rgba(139,92,246,0.5);
+          border-radius: 16px;
+          padding: 14px 18px;
+          box-shadow: 0 4px 24px rgba(139,92,246,0.3);
+        }
+        .goal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 8px;
+        }
+        .goal-name {
+          font-size: 14px;
+          font-weight: 700;
+          color: #c4b5fd;
+        }
+        .goal-amounts {
+          font-size: 13px;
+          color: rgba(255,255,255,0.7);
+        }
+        .goal-bar-bg {
+          width: 100%;
+          height: 10px;
+          background: rgba(255,255,255,0.1);
+          border-radius: 99px;
+          overflow: hidden;
+        }
+        .goal-bar-fill {
+          height: 100%;
+          background: linear-gradient(90deg, #8b5cf6, #ec4899);
+          border-radius: 99px;
+          transition: width 0.8s ease;
         }
 
         /* ── Demo button ── */

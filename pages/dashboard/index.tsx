@@ -15,6 +15,11 @@ export default function Dashboard() {
   const [minInput, setMinInput] = useState('20')
   const [minSaving, setMinSaving] = useState(false)
   const [minMsg, setMinMsg] = useState('')
+  const [goalName, setGoalName] = useState('')
+  const [goalAmount, setGoalAmount] = useState('')
+  const [goalCurrent, setGoalCurrent] = useState(0)
+  const [goalSaving, setGoalSaving] = useState(false)
+  const [goalMsg, setGoalMsg] = useState('')
 
   const streamerId = session?.user?.streamerId
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
@@ -32,6 +37,7 @@ export default function Dashboard() {
     if (!streamerId) return
     fetchDonations()
     fetchSettings()
+    fetchGoal()
     const interval = setInterval(fetchDonations, 15000)
     return () => clearInterval(interval)
   }, [streamerId])
@@ -42,6 +48,45 @@ export default function Dashboard() {
     if (data.minDonation) {
       setMinDonation(data.minDonation)
       setMinInput(String(data.minDonation))
+    }
+  }
+
+  async function fetchGoal() {
+    const res = await fetch('/api/user/goal')
+    const data = await res.json()
+    if (data) {
+      setGoalName(data.goalName || '')
+      setGoalAmount(data.goalAmount ? String(data.goalAmount) : '')
+      setGoalCurrent(data.goalCurrent || 0)
+    }
+  }
+
+  async function saveGoal() {
+    setGoalSaving(true)
+    const res = await fetch('/api/user/goal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ goalName, goalAmount: Number(goalAmount) }),
+    })
+    const data = await res.json()
+    if (res.ok) {
+      setGoalMsg('✅ บันทึกแล้ว')
+      setGoalCurrent(data.goalCurrent)
+    } else {
+      setGoalMsg(`❌ ${data.error}`)
+    }
+    setGoalSaving(false)
+    setTimeout(() => setGoalMsg(''), 3000)
+  }
+
+  async function resetGoal() {
+    if (!confirm('Reset ยอดปัจจุบันเป็น 0?')) return
+    const res = await fetch('/api/user/goal', { method: 'DELETE' })
+    const data = await res.json()
+    if (res.ok) {
+      setGoalCurrent(0)
+      setGoalMsg('✅ Reset แล้ว')
+      setTimeout(() => setGoalMsg(''), 3000)
     }
   }
 
@@ -205,6 +250,55 @@ export default function Dashboard() {
             </div>
           </section>
 
+          {/* Goal */}
+          <section className="section">
+            <h2 className="section-title">🎯 หลอดโดเนท</h2>
+            <div className="url-card">
+              <div className="url-label">ชื่อเป้าหมาย</div>
+              <input
+                type="text"
+                className="min-input"
+                style={{ width: '100%', marginBottom: '12px' }}
+                placeholder="เช่น ซื้อ mic ใหม่"
+                value={goalName}
+                onChange={(e) => setGoalName(e.target.value)}
+                maxLength={50}
+              />
+              <div className="url-label">ยอดเป้าหมาย (บาท)</div>
+              <div className="url-row" style={{ marginBottom: '12px' }}>
+                <input
+                  type="number"
+                  className="min-input"
+                  placeholder="เช่น 5000"
+                  value={goalAmount}
+                  onChange={(e) => setGoalAmount(e.target.value)}
+                  min={1}
+                />
+                <button className="copy-btn" onClick={saveGoal} disabled={goalSaving}>
+                  {goalSaving ? 'กำลังบันทึก...' : 'บันทึก'}
+                </button>
+                <button className="test-btn" onClick={resetGoal}>Reset</button>
+                {goalMsg && <span style={{ fontSize: '13px', color: '#86efac' }}>{goalMsg}</span>}
+              </div>
+
+              {/* Progress bar preview */}
+              {goalAmount && Number(goalAmount) > 0 && (
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginBottom: '6px' }}>
+                    <span>{goalName || 'เป้าหมาย'}</span>
+                    <span>฿{goalCurrent.toLocaleString()} / ฿{Number(goalAmount).toLocaleString()}</span>
+                  </div>
+                  <div className="goal-bar-bg">
+                    <div
+                      className="goal-bar-fill"
+                      style={{ width: `${Math.min((goalCurrent / Number(goalAmount)) * 100, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+
           {/* Donation list */}
           <section className="section">
             <h2 className="section-title">💜 ประวัติ Donation</h2>
@@ -281,6 +375,8 @@ export default function Dashboard() {
         .empty { text-align: center; color: rgba(255,255,255,0.4); padding: 40px; background: rgba(255,255,255,0.03); border-radius: 14px; border: 1px dashed rgba(255,255,255,0.1); }
         .min-input { width: 120px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 8px 12px; color: #fff; font-size: 15px; font-family: inherit; }
         .min-input:focus { outline: none; border-color: #8b5cf6; }
+        .goal-bar-bg { width: 100%; height: 12px; background: rgba(255,255,255,0.1); border-radius: 99px; overflow: hidden; }
+        .goal-bar-fill { height: 100%; background: linear-gradient(90deg, #8b5cf6, #ec4899); border-radius: 99px; transition: width 0.5s ease; }
       `}</style>
       <style global jsx>{`* { box-sizing: border-box; } body { margin: 0; }`}</style>
     </>
