@@ -1,15 +1,18 @@
-import { getServerSession } from 'next-auth'
-import { authOptions } from '../../lib/auth'
+import { prisma } from '../../lib/prisma'
 import type { NextApiRequest, NextApiResponse } from 'next'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).end()
 
-  // ต้อง login ก่อนถึงจะใช้ TTS ได้ (ป้องกันค่าใช้จ่ายจาก Google API)
-  const session = await getServerSession(req, res, authOptions)
-  if (!session) return res.status(401).json({ error: 'Unauthorized' })
+  const { text, streamerId } = req.body
 
-  const { text } = req.body
+  // ตรวจสอบว่า streamerId มีอยู่จริงในฐานข้อมูล (ป้องกันคนนอกใช้ API)
+  if (!streamerId) return res.status(400).json({ error: 'Missing streamerId' })
+  const streamer = await prisma.user.findUnique({
+    where: { streamerId },
+    select: { id: true },
+  })
+  if (!streamer) return res.status(401).json({ error: 'Invalid streamerId' })
   if (!text) return res.status(400).json({ error: 'Missing text' })
   if (text.length > 500) return res.status(400).json({ error: 'Text too long (max 500 chars)' })
 

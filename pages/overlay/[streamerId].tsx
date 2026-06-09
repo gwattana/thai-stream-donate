@@ -33,7 +33,7 @@ export default function OverlayPage({ streamerId }: Props) {
       const res = await fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, streamerId }),
       })
       const data = await res.json()
       if (!data.audioContent) throw new Error('No audio')
